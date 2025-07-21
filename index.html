@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nestify Security Dashboard</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <!-- NAVBAR -->
+  <div class="nav-outer">
+    <div class="nav-bar">
+      <a href="index.html" class="nav-link active">Home</a>
+      <a href="upcoming.html" class="nav-link">Upcoming Visitors</a>
+      <span class="brand">
+        <span class="gold">Nestify</span><span class="blue">.</span>
+      </span>
+      <a href="past.html" class="nav-link">Past Visitors</a>
+      <button id="logout-btn" type="button" class="nav-link" style="background:none;border:none;">Logout</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY SECTION -->
+  <section>
+    <h2>Welcome to Nestify Security Dashboard</h2>
+    <p>This is your summary overview. Use the navigation bar to view upcoming or past visitors.</p>
+    <div class="summary-row">
+      <div class="summary-box upcoming">
+        <div class="summary-label">Upcoming Visitors</div>
+        <div class="summary-number" id="upcoming-count">0</div>
+      </div>
+      <div class="summary-box today">
+        <div class="summary-label">Visitors Today</div>
+        <div class="summary-number" id="today-count">0</div>
+      </div>
+      <div class="summary-box month">
+        <div class="summary-label">Visitors Past Month</div>
+        <div class="summary-number" id="month-count">0</div>
+      </div>
+    </div>
+  </section>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    requireAuth();
+
+    async function loadSummaryCounts() {
+      const base = getApartmentBase();
+
+      // Today's date
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0,10);
+      const monthAgo = new Date(today);
+      monthAgo.setDate(today.getDate() - 30);
+      const monthAgoStr = monthAgo.toISOString().slice(0,10);
+
+      // Upcoming Visitors (status: "pending")
+      const upcomingSnap = await base.where('status', '==', 'pending').get();
+      document.getElementById('upcoming-count').textContent = upcomingSnap.size;
+
+      // Visitors Today (any status, date == today)
+      const todaySnap = await base.where('date', '==', todayStr).get();
+      document.getElementById('today-count').textContent = todaySnap.size;
+
+      // Visitors Past Month (any status, date >= monthAgo)
+      const monthSnap = await base.where('date', '>=', monthAgoStr).get();
+      document.getElementById('month-count').textContent = monthSnap.size;
+    }
+
+    // Call on page load
+    loadSummaryCounts();
+
+    document.getElementById('logout-btn').onclick = function() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upcoming Visitors - Nestify</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <nav>
+    <div class="nav-outer">
+      <div class="nav-bar">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="upcoming.html" class="nav-link active">Upcoming Visitors</a>
+        <span class="brand">
+          <span class="gold">Nestify</span><span class="blue">.</span>
+        </span>
+        <a href="past.html" class="nav-link">Past Visitors</a>
+        <button id="logout-btn" type="button" class="nav-link" style="background:none;border:none;">Logout</button>
+      </div>
+    </div>
+  </nav>
+  <section>
+    <div id="upcoming-list"></div>
+  </section>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    requireAuth();
+
+    async function loadUpcomingVisitors() {
+      const base = getApartmentBase();
+      let snap;
+      try {
+        // Try with ordering (will require index if both fields are used)
+        snap = await base
+          .where('status', '==', 'pending')
+          .orderBy('date')
+          .orderBy('time')
+          .get();
+      } catch (e) {
+        // If index error, fallback to no ordering
+        console.warn("Index error or other Firestore error, falling back to no ordering.", e);
+        snap = await base
+          .where('status', '==', 'pending')
+          .get();
+      }
+
+      console.log("Upcoming visitors:", snap.size);
+      snap.forEach(doc => console.log(doc.data()));
+
+      const list = document.getElementById('upcoming-list');
+      list.innerHTML = '';
+      if (snap.empty) {
+        list.innerHTML = '<div class="no-visitors">No upcoming visitors.</div>';
+      }
+      snap.forEach(doc => {
+        const v = doc.data();
+        const card = document.createElement('div');
+        card.className = 'visitor-card';
+        card.innerHTML = `
+          <div class="visitor-details">
+            <b>${v.visitorName}</b> (${v.purpose})<br>
+            <span>${v.date} ${v.time}</span>
+          </div>
+          <button class="confirm-btn" type="button">Confirm Visit</button>
+        `;
+        card.querySelector('.confirm-btn').onclick = async () => {
+          await doc.ref.update({ status: 'visited', visitedAt: new Date().toISOString() });
+          loadUpcomingVisitors();
+        };
+        list.appendChild(card);
+      });
+    }
+
+    // Load on page load
+    loadUpcomingVisitors();
+
+    document.getElementById('logout-btn').onclick = function() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    };
+  </script>
+</body>
+</html>

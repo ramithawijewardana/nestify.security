@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Nestify.Security</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="centered">
+    <div class="login-card">
+      <div class="login-header">
+        <span class="gold">Nestify.</span><span class="blue">Security</span>
+      </div>
+      <div class="login-subtitle">SMART COMMUNITY</div>
+      <input type="text" id="username" placeholder="Username" required/>
+      <input type="password" id="password" placeholder="Password" required/>
+      <button id="login-btn" type="button" class="login-btn">Login</button>
+      <div id="login-error" class="error"></div>
+    </div>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    document.getElementById('login-btn').onclick = loginWithUsernamePassword;
+    if (localStorage.getItem('apartmentId') && localStorage.getItem('apartmentCollection')) {
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
