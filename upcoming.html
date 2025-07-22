@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Past Visitors - Nestify</title>
+  <title>Upcoming Visitors - Nestify</title>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <nav>
+ <nav>
     <div class="nav-outer">
       <div class="nav-bar">
         <a href="index.html" class="nav-link">Home</a>
-        <a href="upcoming.html" class="nav-link">Upcoming Visitors</a>
+        <a href="upcoming.html" class="nav-link active">Upcoming Visitors</a>
         <span class="brand">
           <span class="gold">Nestify</span><span class="blue">.</span>
         </span>
-        <a href="past.html" class="nav-link active">Past Visitors</a>
+        <a href="past.html" class="nav-link">Past Visitors</a>
         <button id="logout-btn" type="button" class="nav-link" style="background:none;border:none;">Logout</button>
       </div>
     </div>
   </nav>
   <section>
-    <div class="visitor-list" id="past-list"></div>
+    <div class="visitor-list" id="upcoming-list"></div>
   </section>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -28,19 +28,19 @@
   <script>
     requireAuth();
 
-    async function loadPastVisitors() {
+    async function loadUpcomingVisitors() {
       const base = getApartmentBase();
       let snap;
       try {
-        snap = await base.where('status', '==', 'visited').orderBy('visitedAt', 'desc').get();
+        snap = await base.where('status', '==', 'pending').orderBy('date').orderBy('time').get();
       } catch (e) {
-        snap = await base.where('status', '==', 'visited').get();
+        snap = await base.where('status', '==', 'pending').get();
       }
 
-      const list = document.getElementById('past-list');
+      const list = document.getElementById('upcoming-list');
       list.innerHTML = '';
       if (snap.empty) {
-        list.innerHTML = '<div class="no-visitors">No past visitors.</div>';
+        list.innerHTML = '<div class="no-visitors">No upcoming visitors.</div>';
         return;
       }
       snap.forEach(doc => {
@@ -50,18 +50,26 @@
         card.innerHTML = `
           <div class="visitor-details">
             <b>${v.visitorName}</b> <span style="font-weight:400;">(${v.purpose})</span><br>
-            ${v.date} ${v.time}<br>
-            <small>Visited: ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : ''}</small>
+            ${v.date} ${v.time}
           </div>
+          <button class="confirm-btn" type="button" tabindex="-1">Confirm Visit</button>
         `;
-card.onclick = () => {
-  window.location.href = `visitor-details.html?id=${doc.id}`;
-};
+        // Button click: confirm visit
+        card.querySelector('.confirm-btn').onclick = async (e) => {
+          e.stopPropagation();
+          await doc.ref.update({ status: 'visited', visitedAt: new Date().toISOString() });
+          loadUpcomingVisitors();
+        };
+        // Card click: show details
+        card.onclick = (e) => {
+          if (e.target.classList.contains('confirm-btn')) return;
+          showVisitorDetails(v);
+        };
         list.appendChild(card);
       });
     }
 
-    // Modal for details (reuse)
+    // Modal for details
     function showVisitorDetails(v) {
       const modalBg = document.createElement('div');
       modalBg.className = 'visitor-modal-bg';
@@ -77,7 +85,6 @@ card.onclick = () => {
             <b>Resident:</b> ${v.residentName || '-'}<br>
             <b>Room:</b> ${v.room || '-'}<br>
             <b>Status:</b> ${v.status}<br>
-            <b>Visited At:</b> ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : '-'}
           </div>
           <button class="visitor-modal-close" onclick="this.closest('.visitor-modal-bg').remove()">Close</button>
         </div>
@@ -85,7 +92,7 @@ card.onclick = () => {
       document.body.appendChild(modalBg);
     }
 
-    loadPastVisitors();
+    loadUpcomingVisitors();
     document.getElementById('logout-btn').onclick = logout;
   </script>
 </body>
