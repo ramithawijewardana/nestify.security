@@ -20,7 +20,7 @@
     </div>
   </nav>
   <section>
-    <div id="past-list"></div>
+    <div class="visitor-list" id="past-list"></div>
   </section>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -32,25 +32,16 @@
       const base = getApartmentBase();
       let snap;
       try {
-        snap = await base
-          .where('status', '==', 'visited')
-          .orderBy('visitedAt', 'desc')
-          .get();
+        snap = await base.where('status', '==', 'visited').orderBy('visitedAt', 'desc').get();
       } catch (e) {
-        // If index error, fallback to no ordering
-        console.warn("Index error or other Firestore error, falling back to no ordering.", e);
-        snap = await base
-          .where('status', '==', 'visited')
-          .get();
+        snap = await base.where('status', '==', 'visited').get();
       }
-
-      console.log("Past visitors:", snap.size);
-      snap.forEach(doc => console.log(doc.data()));
 
       const list = document.getElementById('past-list');
       list.innerHTML = '';
       if (snap.empty) {
         list.innerHTML = '<div class="no-visitors">No past visitors.</div>';
+        return;
       }
       snap.forEach(doc => {
         const v = doc.data();
@@ -58,22 +49,44 @@
         card.className = 'visitor-card';
         card.innerHTML = `
           <div class="visitor-details">
-            <b>${v.visitorName}</b> (${v.purpose})<br>
-            <span>${v.date} ${v.time}</span><br>
+            <b>${v.visitorName}</b> <span style="font-weight:400;">(${v.purpose})</span><br>
+            ${v.date} ${v.time}<br>
             <small>Visited: ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : ''}</small>
           </div>
         `;
+card.onclick = () => {
+  window.location.href = `visitor-details.html?id=${doc.id}`;
+};
         list.appendChild(card);
       });
     }
 
-    // Load on page load
-    loadPastVisitors();
+    // Modal for details (reuse)
+    function showVisitorDetails(v) {
+      const modalBg = document.createElement('div');
+      modalBg.className = 'visitor-modal-bg';
+      modalBg.innerHTML = `
+        <div class="visitor-modal">
+          <h2>Visitor Details</h2>
+          <div class="visitor-modal-details">
+            <b>Name:</b> ${v.visitorName}<br>
+            <b>Purpose:</b> ${v.purpose}<br>
+            <b>Date:</b> ${v.date}<br>
+            <b>Time:</b> ${v.time}<br>
+            <b>Phone:</b> ${v.visitorPhone || '-'}<br>
+            <b>Resident:</b> ${v.residentName || '-'}<br>
+            <b>Room:</b> ${v.room || '-'}<br>
+            <b>Status:</b> ${v.status}<br>
+            <b>Visited At:</b> ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : '-'}
+          </div>
+          <button class="visitor-modal-close" onclick="this.closest('.visitor-modal-bg').remove()">Close</button>
+        </div>
+      `;
+      document.body.appendChild(modalBg);
+    }
 
-    document.getElementById('logout-btn').onclick = function() {
-      localStorage.clear();
-      window.location.href = "login.html";
-    };
+    loadPastVisitors();
+    document.getElementById('logout-btn').onclick = logout;
   </script>
 </body>
 </html>
