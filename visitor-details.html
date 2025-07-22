@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visitor Details - Nestify</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <style>
+    body {
+      background: #f2f7fb;
+      font-family: 'Poppins', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .details-container {
+      max-width: 420px;
+      margin: 60px auto 0 auto;
+      padding: 0 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.85);
+      box-shadow: 0 8px 32px 0 rgba(34,51,85,0.18);
+      border-radius: 18px;
+      padding: 36px 32px;
+      margin-top: 30px;
+      width: 100%;
+      max-width: 420px;
+      color: #223355;
+      font-size: 1.08rem;
+      font-weight: 500;
+      line-height: 1.7;
+    }
+    .glass-card h2 {
+      margin-top: 0;
+      color: #223355;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .back-btn {
+      margin-top: 18px;
+      background: #223355;
+      color: #fff;
+      border: none;
+      padding: 8px 22px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .brand {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 700;
+      margin-top: 30px;
+      color: #d4af37;
+      letter-spacing: 1px;
+    }
+    .brand .blue {
+      color: #223355;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <span class="gold">Nestify</span><span class="blue">.</span>
+  </div>
+  <div class="details-container">
+    <div class="glass-card" id="details-card">
+      Loading...
+    </div>
+    <button class="back-btn" onclick="window.history.back()">Back</button>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="shared.js"></script>
+  <script>
+    requireAuth();
+
+    function getQueryParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+
+    async function loadVisitorDetails() {
+      const id = getQueryParam('id');
+      if (!id) {
+        document.getElementById('details-card').innerHTML = '<span style="color:red;">No visitor ID provided.</span>';
+        return;
+      }
+      const base = getApartmentBase();
+      try {
+        const doc = await base.doc(id).get();
+        if (!doc.exists) {
+          document.getElementById('details-card').innerHTML = '<span style="color:red;">Visitor not found.</span>';
+          return;
+        }
+        const v = doc.data();
+        document.getElementById('details-card').innerHTML = `
+          <h2>Visitor Details</h2>
+          <div><b>Name:</b> ${v.visitorName}</div>
+          <div><b>Purpose:</b> ${v.purpose}</div>
+          <div><b>Date:</b> ${v.date}</div>
+          <div><b>Time:</b> ${v.time}</div>
+          <div><b>Phone:</b> ${v.visitorPhone || '-'}</div>
+          <div><b>Resident:</b> ${v.residentName || '-'}</div>
+          <div><b>Room:</b> ${v.room || '-'}</div>
+          <div><b>Status:</b> ${v.status}</div>
+          <div><b>Visited At:</b> ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : '-'}</div>
+        `;
+      } catch (e) {
+        document.getElementById('details-card').innerHTML = '<span style="color:red;">Error loading details.</span>';
+      }
+    }
+
+    loadVisitorDetails();
+  </script>
+</body>
+</html>
