@@ -65,3 +65,20 @@ window.getApartmentBase = function() {
     .doc('visitors')
     .collection('entries');
 };
+
+snap.forEach(doc => {
+  const v = doc.data();
+  const card = document.createElement('div');
+  card.className = 'visitor-card';
+  card.innerHTML = `
+    <div class="visitor-details">
+      <b>${v.visitorName}</b> <span style="font-weight:400;">(${v.purpose})</span><br>
+      ${v.date} ${v.time}<br>
+      <small>Visited: ${v.visitedAt ? new Date(v.visitedAt).toLocaleString() : ''}</small>
+    </div>
+  `;
+  card.onclick = () => {
+    window.location.href = `visitor-details.html?id=${doc.id}`;
+  };
+  list.appendChild(card);
+});
