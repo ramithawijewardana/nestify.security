@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
- <nav>
+  <nav>
     <div class="nav-outer">
       <div class="nav-bar">
         <a href="index.html" class="nav-link">Home</a>
@@ -20,7 +20,7 @@
     </div>
   </nav>
   <section>
-    <div class="visitor-list" id="upcoming-list"></div>
+    <div id="upcoming-list"></div>
   </section>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -32,16 +32,27 @@
       const base = getApartmentBase();
       let snap;
       try {
-        snap = await base.where('status', '==', 'pending').orderBy('date').orderBy('time').get();
+        // Try with ordering (will require index if both fields are used)
+        snap = await base
+          .where('status', '==', 'pending')
+          .orderBy('date')
+          .orderBy('time')
+          .get();
       } catch (e) {
-        snap = await base.where('status', '==', 'pending').get();
+        // If index error, fallback to no ordering
+        console.warn("Index error or other Firestore error, falling back to no ordering.", e);
+        snap = await base
+          .where('status', '==', 'pending')
+          .get();
       }
+
+      console.log("Upcoming visitors:", snap.size);
+      snap.forEach(doc => console.log(doc.data()));
 
       const list = document.getElementById('upcoming-list');
       list.innerHTML = '';
       if (snap.empty) {
         list.innerHTML = '<div class="no-visitors">No upcoming visitors.</div>';
-        return;
       }
       snap.forEach(doc => {
         const v = doc.data();
@@ -49,51 +60,26 @@
         card.className = 'visitor-card';
         card.innerHTML = `
           <div class="visitor-details">
-            <b>${v.visitorName}</b> <span style="font-weight:400;">(${v.purpose})</span><br>
-            ${v.date} ${v.time}
+            <b>${v.visitorName}</b> (${v.purpose})<br>
+            <span>${v.date} ${v.time}</span>
           </div>
-          <button class="confirm-btn" type="button" tabindex="-1">Confirm Visit</button>
+          <button class="confirm-btn" type="button">Confirm Visit</button>
         `;
-        // Button click: confirm visit
-        card.querySelector('.confirm-btn').onclick = async (e) => {
-          e.stopPropagation();
+        card.querySelector('.confirm-btn').onclick = async () => {
           await doc.ref.update({ status: 'visited', visitedAt: new Date().toISOString() });
           loadUpcomingVisitors();
-        };
-        // Card click: show details
-        card.onclick = (e) => {
-          if (e.target.classList.contains('confirm-btn')) return;
-          showVisitorDetails(v);
         };
         list.appendChild(card);
       });
     }
 
-    // Modal for details
-    function showVisitorDetails(v) {
-      const modalBg = document.createElement('div');
-      modalBg.className = 'visitor-modal-bg';
-      modalBg.innerHTML = `
-        <div class="visitor-modal">
-          <h2>Visitor Details</h2>
-          <div class="visitor-modal-details">
-            <b>Name:</b> ${v.visitorName}<br>
-            <b>Purpose:</b> ${v.purpose}<br>
-            <b>Date:</b> ${v.date}<br>
-            <b>Time:</b> ${v.time}<br>
-            <b>Phone:</b> ${v.visitorPhone || '-'}<br>
-            <b>Resident:</b> ${v.residentName || '-'}<br>
-            <b>Room:</b> ${v.room || '-'}<br>
-            <b>Status:</b> ${v.status}<br>
-          </div>
-          <button class="visitor-modal-close" onclick="this.closest('.visitor-modal-bg').remove()">Close</button>
-        </div>
-      `;
-      document.body.appendChild(modalBg);
-    }
-
+    // Load on page load
     loadUpcomingVisitors();
-    document.getElementById('logout-btn').onclick = logout;
+
+    document.getElementById('logout-btn').onclick = function() {
+      localStorage.clear();
+      window.location.href = "login.html";
+    };
   </script>
 </body>
 </html>
