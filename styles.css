@@ -371,26 +371,6 @@ section .summary-box.month .summary-number    { color: #00897b; }
   font-weight: 700;
 }
 
-.confirm-btn {
-  background: #d4af37;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 7px 18px;
-  font-size: 1rem;
-  font-weight: 600;
-  margin-right: 18px;
-  margin-left: 0;
-  cursor: pointer;
-  transition: background 0.2s;
-  position: absolute;
-  left: 22px;
-  bottom: 18px;
-}
-.confirm-btn:hover {
-  background: #bfa133;
-}
-
 @media (max-width: 600px) {
   .visitor-card {
     flex-direction: column;
