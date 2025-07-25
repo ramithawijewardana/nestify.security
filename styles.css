@@ -397,9 +397,4 @@ section .summary-box.month .summary-number    { color: #00897b; }
     align-items: flex-start;
     padding: 14px 10px 40px 10px;
   }
-  .confirm-btn {
-    left: 10px;
-    bottom: 10px;
-    width: 90%;
-  }
 }
