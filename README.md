@@ -2,6 +2,7 @@ Nestify.Security 🔒
 
 username: ap1sec1
 pass: abc@123
+
 Nestify.Security is the **security and access control system** for the Nestify ecosystem.  
 It provides tools for **visitor management, gate security, and authentication** to ensure safe and seamless entry into the community.
 
@@ -14,4 +15,5 @@ It provides tools for **visitor management, gate security, and authentication** 
 ## 🛠️ Tech Stack
 - **Frontend:** HTML, CSS, JavaScript (with Tailwind for styling)  
 - **Backend:** Firebase Authentication & Firestore Database  
+
 - **Deployment:** Vercel / Firebase Hosting  
